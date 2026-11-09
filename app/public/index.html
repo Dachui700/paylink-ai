@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小卖家收款助手 | Small Seller Payment Assistant</title>
+  <style>
+    :root {
+      --pp-blue: #003087;
+      --pp-light-blue: #0070ba;
+      --pp-accent: #009cde;
+      --pp-gold: #ffc439;
+      --bg-color: #f5f7fa;
+      --card-bg: #ffffff;
+      --text-main: #2c3e50;
+      --text-muted: #6c757d;
+      --border-color: #e2e8f0;
+      --success-green: #10b981;
+      --warning-amber: #f59e0b;
+      --danger-red: #ef4444;
+      --radius: 12px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 14px rgba(0,0,0,0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Top Mock Banner */
+    .mock-banner {
+      background: #fffbeb;
+      border-bottom: 1px solid #fde68a;
+      color: #92400e;
+      font-size: 13px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 500;
+    }
+    .mock-banner.live {
+      background: #ecfdf5;
+      border-bottom: 1px solid #a7f3d0;
+      color: #065f46;
+    }
+    .mock-tag {
+      background: #fef3c7;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid #fcd34d;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .mock-banner.live .mock-tag {
+      background: #d1fae5;
+      border-color: #6ee7b7;
+      color: #065f46;
+    }
+
+    /* Header */
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-badge {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #003087, #0070ba);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 900;
+      font-size: 20px;
+      box-shadow: 0 2px 6px rgba(0, 112, 186, 0.3);
+    }
+    .brand h1 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--pp-blue);
+      line-height: 1.2;
+    }
+    .brand span {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-secondary {
+      background: #f1f5f9;
+      border: 1px solid var(--border-color);
+      color: #475569;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+
+    /* App Layout */
+    .app-container {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 110px);
+      overflow: hidden;
+    }
+
+    /* Main Chat Area */
+    .chat-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: #f8fafc;
+      position: relative;
+    }
+
+    /* Message Stream */
+    .message-stream {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      scroll-behavior: smooth;
+    }
+
+    .message {
+      display: flex;
+      gap: 12px;
+      max-width: 85%;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .message.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+    .message.bot {
+      align-self: flex-start;
+    }
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .message.user .avatar {
+      background: #e2e8f0;
+      color: #475569;
+    }
+    .message.bot .avatar {
+      background: linear-gradient(135deg, #003087, #0070ba);
+      color: #fff;
+    }
+
+    .bubble {
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      line-height: 1.5;
+      box-shadow: var(--shadow-sm);
+    }
+    .message.user .bubble {
+      background: var(--pp-blue);
+      color: #ffffff;
+      border-bottom-right-radius: 4px;
+    }
+    .message.bot .bubble {
+      background: #ffffff;
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-bottom-left-radius: 4px;
+      width: 100%;
+    }
+
+    /* Card Components inside Bot Bubble */
+    .parsed-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 8px 0 12px 0;
+    }
+    .chip {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #334155;
+    }
+    .chip strong {
+      color: #0f172a;
+    }
+
+    .invoice-card {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 14px;
+      margin-top: 10px;
+    }
+    .invoice-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .invoice-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: #0f172a;
+    }
+    .status-badge {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .status-unpaid {
+      background: #fef3c7;
+      color: #b45309;
+      border: 1px solid #fde68a;
+    }
+    .status-paid {
+      background: #d1fae5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+    }
+
+    .link-box {
+      background: #ffffff;
+      border: 1px dashed #94a3b8;
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin: 8px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-family: monospace;
+      font-size: 12px;
+      word-break: break-all;
+    }
+    .link-box a {
+      color: var(--pp-light-blue);
+      text-decoration: none;
+    }
+    .link-box a:hover {
+      text-decoration: underline;
+    }
+
+    .btn-copy {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1d4ed8;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-copy:hover {
+      background: #dbeafe;
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .btn-action {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+      border: none;
+    }
+    .btn-check {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+    }
+    .btn-check:hover {
+      background: #e2e8f0;
+    }
+    .btn-remind {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #c2410c;
+    }
+    .btn-remind:hover {
+      background: #ffedd5;
+    }
+    .btn-pay-mock {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #047857;
+    }
+    .btn-pay-mock:hover {
+      background: #d1fae5;
+    }
+
+    /* Reminder Box */
+    .reminder-box {
+      margin-top: 10px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 12px;
+      color: #78350f;
+      display: none;
+      animation: fadeIn 0.2s ease;
+    }
+    .reminder-box.active {
+      display: block;
+    }
+    .reminder-text {
+      white-space: pre-wrap;
+      background: #ffffff;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #fef3c7;
+      margin: 6px 0;
+      font-family: inherit;
+    }
+
+    /* Prompt Chips */
+    .quick-prompts {
+      padding: 8px 20px;
+      background: #ffffff;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .quick-prompts span {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .prompt-chip {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      color: #475569;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .prompt-chip:hover {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+      color: #1d4ed8;
+    }
+
+    /* Input Footer */
+    .input-section {
+      background: #ffffff;
+      border-top: 1px solid var(--border-color);
+      padding: 14px 20px;
+      display: flex;
+      gap: 12px;
+    }
+    .input-wrapper {
+      flex: 1;
+      position: relative;
+    }
+    .chat-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid var(--border-color);
+      border-radius: var(--radius);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .chat-input:focus {
+      border-color: var(--pp-light-blue);
+      box-shadow: 0 0 0 3px rgba(0, 112, 186, 0.1);
+    }
+    .btn-send {
+      background: linear-gradient(135deg, #003087, #0070ba);
+      color: #ffffff;
+      border: none;
+      padding: 0 20px;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: opacity 0.2s;
+    }
+    .btn-send:hover {
+      opacity: 0.92;
+    }
+    .btn-send:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Sidebar for Invoice History */
+    .sidebar {
+      width: 320px;
+      border-left: 1px solid var(--border-color);
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease;
+    }
+    .sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sidebar-header h2 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--pp-blue);
+    }
+    .history-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .history-item {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: #fafafa;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .history-item:hover {
+      background: #f1f5f9;
+    }
+    .history-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .history-cust {
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .history-amount {
+      font-weight: 700;
+      color: var(--pp-blue);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(50px);
+      background: rgba(15, 23, 42, 0.9);
+      color: #fff;
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-size: 13px;
+      opacity: 0;
+      transition: all 0.25s ease;
+      pointer-events: none;
+      z-index: 1000;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+      .message {
+        max-width: 95%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Banner: Mock Mode vs Live Mode -->
+  <div id="mockBanner" class="mock-banner">
+    <div>
+      <span class="mock-tag" id="bannerTag">MOCK MODE</span>
+      <span id="bannerText" style="margin-left: 8px;">未配置 PayPal 凭证，当前处于本地模拟演示模式（无需真实账号即可跑通全流程）</span>
+    </div>
+    <span style="font-size: 12px; opacity: 0.85;">PayPal AI Hackathon 专用</span>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="logo-badge">P</div>
+      <div>
+        <h1>小卖家收款助手 <span style="font-size: 13px; color: #64748b; font-weight: normal;">| Small Seller Payment Assistant</span></h1>
+        <span>说一句话生成 PayPal 收款链接，实时查到账与一键催款</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-secondary" onclick="loadHistory()">
+        <span>📋</span> 刷新记录
+      </button>
+    </div>
+  </header>
+
+  <!-- App Layout -->
+  <div class="app-container">
+    <!-- Chat Section -->
+    <div class="chat-section">
+      <div class="message-stream" id="chatStream">
+        <!-- Welcome Message -->
+        <div class="message bot">
+          <div class="avatar">AI</div>
+          <div class="bubble">
+            <strong>你好！我是你的 PayPal 收款助手 👋</strong><br>
+            直接用自然语言（中文或英文）告诉我收款需求，例如：<br>
+            <em>“给客户 A 发 50 美元的付款链接，卖的是手工皮包”</em><br>
+            <em>“Send a $75 payment link to Bob for ceramic mug”</em><br><br>
+            我会自动解析出<strong>客户名、金额、货币与商品</strong>，生成正式的 PayPal 收款链接，并随时为你跟踪到账状态与生成友好催款文案。
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Prompt Suggestions -->
+      <div class="quick-prompts">
+        <span>💡 快捷示例:</span>
+        <button class="prompt-chip" onclick="usePrompt('给客户 A 发 50 美元的付款链接，卖的是手工皮包')">给客户 A 发 50 美元（手工皮包）</button>
+        <button class="prompt-chip" onclick="usePrompt('给张三发一个 120 块的手工定制钱包链接')">给张三发 120 块（定制钱包）</button>
+        <button class="prompt-chip" onclick="usePrompt('向王总收款 500 人民币 网页设计定金')">向王总收款 500 元（网页设计定金）</button>
+        <button class="prompt-chip" onclick="usePrompt('Send a $75 payment link to Bob for ceramic mug')">Send $75 to Bob (ceramic mug)</button>
+      </div>
+
+      <!-- Input Area -->
+      <div class="input-section">
+        <div class="input-wrapper">
+          <input
+            type="text"
+            id="chatInput"
+            class="chat-input"
+            placeholder="输入收款需求，例如：给客户 A 发 50 美元付款链接，卖的是手工皮包..."
+            onkeydown="if(event.key==='Enter') sendRequest()"
+          />
+        </div>
+        <button id="sendBtn" class="btn-send" onclick="sendRequest()">
+          <span>生成链接</span>
+          <span>⚡</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Sidebar: Created Links History -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h2>收款记录 / History</h2>
+        <span id="historyCount" style="font-size: 11px; background: #e2e8f0; padding: 2px 6px; border-radius: 999px;">0 笔</span>
+      </div>
+      <div class="history-list" id="historyList">
+        <div style="color: #94a3b8; text-align: center; font-size: 12px; margin-top: 30px;">
+          暂无收款链接记录<br>在左侧聊天框输入即可创建
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast">已复制到剪贴板</div>
+
+  <script>
+    let isMockMode = true;
+
+    // Fetch initial config
+    async function initConfig() {
+      try {
+        const res = await fetch('/api/config');
+        const data = await res.json();
+        isMockMode = data.mockMode;
+        const banner = document.getElementById('mockBanner');
+        const tag = document.getElementById('bannerTag');
+        const text = document.getElementById('bannerText');
+
+        if (isMockMode) {
+          banner.className = 'mock-banner';
+          tag.innerText = 'MOCK MODE';
+          text.innerText = '未配置 PayPal 凭证，当前处于本地模拟演示模式（无需真实账号即可跑通完整流程）';
+        } else {
+          banner.className = 'mock-banner live';
+          tag.innerText = 'SANDBOX CONNECTED';
+          text.innerText = '已成功连接 PayPal 官方沙箱环境 (Invoicing API v2)';
+        }
+      } catch (err) {
+        console.error('Failed to load config:', err);
+      }
+      loadHistory();
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('已复制到剪贴板！');
+      }).catch(() => {
+        // Fallback
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('已复制到剪贴板！');
+      });
+    }
+
+    function usePrompt(text) {
+      const input = document.getElementById('chatInput');
+      input.value = text;
+      input.focus();
+    }
+
+    // Append a user message to the chat
+    function appendUserMessage(text) {
+      const stream = document.getElementById('chatStream');
+      const div = document.createElement('div');
+      div.className = 'message user';
+      div.innerHTML = `
+        <div class="avatar">卖家</div>
+        <div class="bubble">${escapeHtml(text)}</div>
+      `;
+      stream.appendChild(div);
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    // Render an invoice response card in the chat
+    function appendInvoiceCard(link, parsed) {
+      const stream = document.getElementById('chatStream');
+      const div = document.createElement('div');
+      div.className = 'message bot';
+      div.id = `msg-${link.id}`;
+
+      const statusBadge = link.status === 'PAID'
+        ? `<span class="status-badge status-paid" id="badge-${link.id}">✓ 已到账 PAID</span>`
+        : `<span class="status-badge status-unpaid" id="badge-${link.id}">⏳ 待支付 UNPAID</span>`;
+
+      const mockBtn = isMockMode ? `
+        <button class="btn-action btn-pay-mock" onclick="simulatePaid('${link.id}')">
+          <span>⚡ 模拟买家已付款</span>
+        </button>
+      ` : '';
+
+      div.innerHTML = `
+        <div class="avatar">AI</div>
+        <div class="bubble">
+          <div>收款链接已为您生成！以下是智能提取的信息：</div>
+          <div class="parsed-chips">
+            <span class="chip">👤 客户: <strong>${escapeHtml(link.customer)}</strong></span>
+            <span class="chip">💰 金额: <strong>${link.currency} ${link.amount.toFixed(2)}</strong></span>
+            <span class="chip">📦 商品: <strong>${escapeHtml(link.item)}</strong></span>
+            <span class="chip">🔍 模式: <strong>${link.isMock ? '本地模拟 (Mock)' : 'PayPal 沙箱'}</strong></span>
+          </div>
+
+          <div class="invoice-card">
+            <div class="invoice-header">
+              <span class="invoice-title">PayPal 收款单 (${escapeHtml(link.invoiceId)})</span>
+              ${statusBadge}
+            </div>
+
+            <div class="link-box">
+              <a href="${escapeHtml(link.paymentUrl)}" target="_blank" id="url-${link.id}">${escapeHtml(link.paymentUrl)}</a>
+              <button class="btn-copy" onclick="copyToClipboard('${escapeHtml(link.paymentUrl)}')">复制链接</button>
+            </div>
+
+            <div class="action-row">
+              <button class="btn-action btn-check" onclick="checkStatus('${link.id}')">
+                <span>🔄 查到账</span>
+              </button>
+              <button class="btn-action btn-remind" onclick="draftReminder('${link.id}')">
+                <span>💬 生成催款提醒</span>
+              </button>
+              ${mockBtn}
+            </div>
+
+            <!-- Reminder Draft Box -->
+            <div class="reminder-box" id="remind-box-${link.id}">
+              <strong>📝 催款文案（已为您自动生成，未直接发送任何消息）：</strong>
+              <div class="reminder-text" id="remind-text-${link.id}"></div>
+              <div style="display: flex; gap: 8px; margin-top: 6px;">
+                <button class="btn-copy" onclick="copyReminder('${link.id}')">📋 复制催款文案</button>
+                <button class="btn-copy" style="background: #f1f5f9; border-color: #cbd5e1; color: #475569;" onclick="toggleReminder('${link.id}', false)">收起</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      stream.appendChild(div);
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    async function sendRequest() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      appendUserMessage(text);
+      input.value = '';
+
+      const sendBtn = document.getElementById('sendBtn');
+      sendBtn.disabled = true;
+
+      try {
+        const res = await fetch('/api/links', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+
+        const data = await res.json();
+        if (data.error) {
+          alert('生成失败: ' + data.error);
+        } else {
+          appendInvoiceCard(data.link, data.parsedInfo);
+          loadHistory();
+        }
+      } catch (err) {
+        alert('网络请求出错: ' + err.message);
+      } finally {
+        sendBtn.disabled = false;
+        input.focus();
+      }
+    }
+
+    async function checkStatus(id) {
+      try {
+        const res = await fetch(`/api/links/${id}/status`);
+        const data = await res.json();
+        const badge = document.getElementById(`badge-${id}`);
+        if (badge) {
+          if (data.status === 'PAID') {
+            badge.className = 'status-badge status-paid';
+            badge.innerHTML = '✓ 已到账 PAID';
+            showToast('✅ 确认已到账 (PAID)！');
+          } else {
+            badge.className = 'status-badge status-unpaid';
+            badge.innerHTML = '⏳ 待支付 UNPAID';
+            showToast('⏳ 尚未到账，买家待支付中');
+          }
+        }
+        loadHistory();
+      } catch (e) {
+        showToast('查询失败: ' + e.message);
+      }
+    }
+
+    async function simulatePaid(id) {
+      try {
+        const res = await fetch(`/api/links/${id}/simulate-paid`, { method: 'POST' });
+        const data = await res.json();
+        const badge = document.getElementById(`badge-${id}`);
+        if (badge) {
+          badge.className = 'status-badge status-paid';
+          badge.innerHTML = '✓ 已到账 PAID';
+        }
+        showToast('⚡ 模拟付款成功！状态已变更为【已到账】');
+        loadHistory();
+      } catch (e) {
+        showToast('模拟付款操作失败: ' + e.message);
+      }
+    }
+
+    async function draftReminder(id) {
+      try {
+        const res = await fetch(`/api/links/${id}/remind`, { method: 'POST' });
+        const data = await res.json();
+        const box = document.getElementById(`remind-box-${id}`);
+        const textEl = document.getElementById(`remind-text-${id}`);
+        if (box && textEl) {
+          textEl.innerText = data.reminderText;
+          box.classList.add('active');
+        }
+        showToast('催款提醒文案已生成！');
+      } catch (e) {
+        showToast('催款文案生成失败: ' + e.message);
+      }
+    }
+
+    function toggleReminder(id, show) {
+      const box = document.getElementById(`remind-box-${id}`);
+      if (box) {
+        if (show) box.classList.add('active');
+        else box.classList.remove('active');
+      }
+    }
+
+    function copyReminder(id) {
+      const textEl = document.getElementById(`remind-text-${id}`);
+      if (textEl) {
+        copyToClipboard(textEl.innerText);
+      }
+    }
+
+    async function loadHistory() {
+      try {
+        const res = await fetch('/api/links');
+        const data = await res.json();
+        const list = document.getElementById('historyList');
+        const count = document.getElementById('historyCount');
+        count.innerText = `${data.total} 笔`;
+
+        if (!data.links || data.links.length === 0) {
+          list.innerHTML = `<div style="color: #94a3b8; text-align: center; font-size: 12px; margin-top: 30px;">暂无收款链接记录<br>在左侧聊天框输入即可创建</div>`;
+          return;
+        }
+
+        list.innerHTML = data.links.map(l => `
+          <div class="history-item" onclick="scrollToCard('${l.id}')">
+            <div class="history-row">
+              <span class="history-cust">${escapeHtml(l.customer)}</span>
+              <span class="history-amount">${l.currency} ${l.amount.toFixed(2)}</span>
+            </div>
+            <div class="history-row" style="color: #64748b; font-size: 11px;">
+              <span>${escapeHtml(l.item)}</span>
+              <span style="font-weight: 600; color: ${l.status === 'PAID' ? '#047857' : '#b45309'}">
+                ${l.status === 'PAID' ? '已到账' : '待支付'}
+              </span>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('History load error:', e);
+      }
+    }
+
+    function scrollToCard(id) {
+      const el = document.getElementById(`msg-${id}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    window.onload = initConfig;
+  </script>
+</body>
+</html>
